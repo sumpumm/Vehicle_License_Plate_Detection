@@ -1,15 +1,13 @@
 from ultralytics import YOLO
 
-# Load the trained model
-model = YOLO(r"runs\detect\train\weights\best.pt")
 
-# Define image path
-image_path = r"vehicles\Tata-Nexon-EV.jpg"
+model = YOLO(r"runs/detect/train/weights/best.pt")  
 
-# Run inference
-results = model(image_path)
 
-# Optional: display results
-results[0].show()  # Show the image with bounding boxes
-# or
-results[0].save(filename="output.jpg")  # Save the result to a file
+results = model.predict(
+    source=r"test_vids/test1.mp4",  
+    save=True,
+    project="outputs",              
+    name="yolo_result")
+
+
