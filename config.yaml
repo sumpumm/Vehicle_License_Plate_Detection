@@ -1,0 +1,6 @@
+path: F:\SAMARPAN\Vehicle Number Plate Detection\Dataset
+train: train/images
+val: train/images
+
+names:
+  0: license_plate
