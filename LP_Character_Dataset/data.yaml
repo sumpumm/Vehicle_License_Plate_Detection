@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 19
+names: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'ba', 'cha', 'ga', 'ja', 'jha', 'ka', 'kha', 'lu', 'pa']
+
+roboflow:
+  workspace: monkey-det-eje1y
+  project: characterdet
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/monkey-det-eje1y/characterdet/dataset/2
