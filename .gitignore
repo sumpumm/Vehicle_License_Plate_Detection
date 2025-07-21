@@ -181,5 +181,6 @@ License_plate_Dataset/
 LP_Character_Dataset/
 outputs/
 runs/
-
-
+try.py
+plates.csv
+individual_plates.csv
