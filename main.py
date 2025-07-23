@@ -1,7 +1,8 @@
 from ultralytics import YOLO
-import cv2,easyocr
+import cv2,easyocr,os
 from utils import get_xyxy
 import pandas as pd
+
 
 video_path=r"test_vids\test2.mp4"
 
@@ -13,10 +14,11 @@ reader=easyocr.Reader(['ne'])
 
 
 #,save=True,project="outputs",name="yolo_result",save_crop=True
-results=model.track(source=video_path,stream=True)
+results=model.track(source=video_path,stream=True,conf=0.6,save=True)
 
 #get the id and coordinates of the detected numberplates
 plates_dict=get_xyxy(results)
+print(plates_dict)
 
 detected_plates_ocr_result=[]
 
@@ -37,9 +39,8 @@ for id,coord in plates_dict.items():
             detected_plates_ocr_result.append(text)
         cv2.imwrite(f"outputs/extracted_plate/plate_{id}.jpg", crop)
         
-print(detected_plates_ocr_result)               
-df=pd.DataFrame({
-    "plate_number":detected_plates_ocr_result
-})
-df.to_csv('plates.csv', index=False)
-
+# print(detected_plates_ocr_result)               
+# df=pd.DataFrame({
+#     "plate_number":detected_plates_ocr_result
+# })
+# df.to_csv('plates.csv', index=False)
