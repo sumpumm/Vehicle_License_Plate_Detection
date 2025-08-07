@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from models import ModelInput
-from ultralytics import YOLO
-import cv2,easyocr
 import sys,os
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +12,6 @@ from classes.Frame import Frame
 from utils import get_xyxy,convert_yolo_output_avi_to_mp4
 app=FastAPI()
 origins = [ "*", ]
-app=FastAPI()
 app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -78,3 +75,5 @@ def detect(inputs:ModelInput):
             print(f"Error: Could not read frame {frame_number}")
     convert_yolo_output_avi_to_mp4("outputs","track",inputs.fileName.replace(".mp4", ".avi"))
     return {"result":detected_plates_ocr_result}
+
+

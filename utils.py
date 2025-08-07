@@ -1,5 +1,6 @@
 from moviepy import VideoFileClip
 import os
+from math import exp
 
 def get_xyxy(results):
     """ 
@@ -47,3 +48,7 @@ def convert_yolo_output_avi_to_mp4(project_dir: str, name: str, fileName: str) -
         print("Conversion failed:", e)
         return None
     return mp4_path
+
+
+def gaussian(x, sigma):
+    return exp(-(x ** 2) / (2 * sigma ** 2))
