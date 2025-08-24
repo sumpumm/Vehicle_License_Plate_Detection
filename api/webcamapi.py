@@ -4,13 +4,13 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 from models import ImageInput
-from ultralytics import YOLO
 from fastapi.middleware.cors import CORSMiddleware
-import easyocr,cv2
+import os,sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from classes.ImageProcessor import ImageProcessor
+import cv2,easyocr
 
-model = YOLO(r"../runs/detect/train/weights/best.pt")
 reader = easyocr.Reader(['ne'])
-
 app=FastAPI()
 origins = [ "*", ]
 app.add_middleware(
@@ -35,33 +35,51 @@ async def upload_frame(data: ImageInput):
 
         # Optional: convert to OpenCV format (for your license plate detection)
         image_np = np.array(image)
-        
-
-        #  Now you can run your license plate detection on image_cv
-        results=model.track(source=image_np,conf=0.6,project="outputs",name="track",exist_ok=True)
-        boxes=results[0].boxes.xyxy.numpy()
-        x1, y1, x2, y2 = map(int, boxes[0])
-        
-        annotated_img = results[0].plot()
-        
-        annotated_pil = Image.fromarray(annotated_img)
-        
         image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+
+        imageProcessor=ImageProcessor(image_bgr,"../runs/detect/train/weights/best.pt")
+        imageProcessor.process_frame()
+
+        annotated_img=imageProcessor.annotated_image()
+        annotated_img_rgb=cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
         
-        cropped_plate=image_bgr[y1:y2, x1:x2]
+        lp=imageProcessor.crop_license_plate()
+        cv2.imshow("plate",lp)
+        cv2.waitKey(0)              
+        cv2.destroyAllWindows() 
         
-        cv2.imwrite("outputs/track/cropped_plate.jpg", cropped_plate)
+        annotated_pil = Image.fromarray(annotated_img_rgb)
         
-        ocr_results = reader.readtext(cropped_plate)
+        resized = cv2.resize(lp, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+        cv2.imshow("resized",resized)
+        cv2.waitKey(0)              
+        cv2.destroyAllWindows() 
+        cv2.imwrite("outputs/track/cropped_plate.jpg", lp)
+        
+        lp_gray=imageProcessor.BGR2GRAY(resized)
+        
+        denoised = imageProcessor.bilateral_filter_gray(lp_gray, 3, 3, 3)
+        cv2.imshow("denoised_plate",denoised)
+        cv2.waitKey(0)              
+        cv2.destroyAllWindows()
+        
+        lp_thresh=imageProcessor.binary_threshold_inv(denoised)
+        cv2.imshow("lp_thresh_plate",lp_thresh)
+        cv2.waitKey(0)              
+        cv2.destroyAllWindows()
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        morphed = cv2.morphologyEx(lp_thresh, cv2.MORPH_OPEN, kernel)
+        
+        ocr_results = reader.readtext(morphed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.')
+        print(ocr_results)
         texts = [res[1] for res in ocr_results]
         conc_text = ""
     
         for text in texts:
             conc_text+=text
         
-        with open("outputs/track/plate_text.txt", "a", encoding="utf-8") as f:
-            f.write(conc_text+"\n")
-        
+        print("LP: " +conc_text)
         
         # Save to BytesIO buffer
         buffered = io.BytesIO()
