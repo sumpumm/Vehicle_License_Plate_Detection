@@ -10,7 +10,7 @@ class ImageProcessor:
         self.model=YOLO(model_path)
         self.frame_np=frame_np #np array
         self.results=None
-        # self.reader=easyocr.Reader(['ne'])
+      
         
     def process_frame(self):
         self.results=self.model.track(
@@ -27,7 +27,7 @@ class ImageProcessor:
     def crop_license_plate(self):
         boxes=self.results[0].boxes.xyxy.numpy()
         x1, y1, x2, y2 = map(int, boxes[0])
-        return self.frame_np[y1:y2, x1:x2] #height,width deko ho 
+        return self.frame_np[y1:y2, x1:x2]  
     
     def BGR2GRAY(self,lp):
         height,width,_=lp.shape
@@ -84,6 +84,42 @@ class ImageProcessor:
                     
         return result
         
+    def erode(self, image, kernel):
+        m, n = kernel.shape
+        pad_m, pad_n = m//2, n//2
+        padded = np.pad(image, ((pad_m, pad_m), (pad_n, pad_n)), constant_values=0)
+        out = np.zeros_like(image)
+
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                region = padded[i:i+m, j:j+n]
+                if np.all(region[kernel==1] == 255):  # 255 = foreground
+                    out[i, j] = 255
+        return out
+
+    def dilate(self, image, kernel):
+        m, n = kernel.shape
+        pad_m, pad_n = m//2, n//2
+        padded = np.pad(image, ((pad_m, pad_m), (pad_n, pad_n)), constant_values=0)
+        out = np.zeros_like(image)
+
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                region = padded[i:i+m, j:j+n]
+                if np.any(region[kernel==1] == 255):
+                    out[i, j] = 255
+        return out
+
+    def opening(self, image, kernel):
+        eroded = self.erode(image, kernel)
+        opened = self.dilate(eroded, kernel)
+        return opened
+
+    def closing(self, image, kernel):
+        dilated = self.dilate(image, kernel)
+        closed = self.erode(dilated, kernel)
+        return closed
+    
     
 # imageProcessor=ImageProcessor("viber_image_2025-07-27_23-41-23-168.jpg","../runs/detect/train/weights/best.pt")
 

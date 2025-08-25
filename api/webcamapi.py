@@ -68,10 +68,21 @@ async def upload_frame(data: ImageInput):
         cv2.waitKey(0)              
         cv2.destroyAllWindows()
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-        morphed = cv2.morphologyEx(lp_thresh, cv2.MORPH_OPEN, kernel)
+        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        # morphed = cv2.morphologyEx(lp_thresh, cv2.MORPH_OPEN, kernel)
         
-        ocr_results = reader.readtext(morphed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.')
+        kernel = np.ones((5,5), dtype=np.uint8)
+        opened = imageProcessor.opening(lp_thresh, kernel)
+        cv2.imshow("opened",opened)
+        cv2.waitKey(0)              
+        cv2.destroyAllWindows()
+        
+        closed = imageProcessor.closing(opened, kernel)
+        cv2.imshow("closed",closed)
+        cv2.waitKey(0)              
+        cv2.destroyAllWindows()
+        
+        ocr_results = reader.readtext(closed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.')
         print(ocr_results)
         texts = [res[1] for res in ocr_results]
         conc_text = ""
