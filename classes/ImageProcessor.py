@@ -6,11 +6,11 @@ from utils import gaussian
 from math import sqrt 
 
 class ImageProcessor:
-    #def __init__(self,frame_np,model_path):
-    #    self.model=YOLO(model_path)
-    #    self.frame_np=frame_np #np array
-    #    self.results=None
-    #    # self.reader=easyocr.Reader(['ne'])
+    def __init__(self,frame_np,model_path):
+        self.model=YOLO(model_path)
+        self.frame_np=frame_np #np array
+        self.results=None
+        # self.reader=easyocr.Reader(['ne'])
         
     def process_frame(self):
         self.results=self.model.track(
