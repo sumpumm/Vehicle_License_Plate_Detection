@@ -6,19 +6,20 @@ from utils import gaussian
 from math import sqrt 
 
 class ImageProcessor:
-    def __init__(self,frame_np,model_path):
-        self.model = YOLO(model_path)
-        self.frame_np = frame_np
-        self.results= None
-      
-      
+    def __init__(self,path,model_path):
+        self.path=path
+        self.model=YOLO(model_path)
+        self.frame=cv2.imread(path) #image lai cv2 ko format ma load gareko cham, numpy array ko format ma cha
+        self.results=None
+        self.reader=easyocr.Reader(['ne'])
+        
     def process_frame(self):
-        self.results = self.model.track (
-            source= self.frame_np,
-            conf= 0.6,
-            project= "outputs",
-            name="frame",
-            exist_ok = True
+        self.results=self.model.track(
+            source=self.frame,
+            conf=0.6,
+            project="outputs",
+            name="track",
+            exist_ok=True
         )
         
     def annotated_image(self):
@@ -27,8 +28,8 @@ class ImageProcessor:
     def crop_license_plate(self):
         boxes = self.results[0].boxes.xyxy.numpy()
         x1, y1, x2, y2 = map(int, boxes[0])
-        return self.frame_np[y1:y2, x1:x2]
-   
+        return self.frame[y1:y2, x1:x2] #height,width deko ho 
+    
     def BGR2GRAY(self,lp):
         height,width,_ =lp.shape
        
@@ -67,18 +68,59 @@ class ImageProcessor:
                 filtered_img[i, j] = pixel_val / wp_total
 
         return filtered_img.astype(np.uint8)
+               
+        
     
-    def binary_threshold_inv(self,image,threshold=100,max_value=255):
-        result = np.zeros_like(image)
-        
-        height,width=image.shape
-        
-        for i in range(height):
-            for j in range(width):
-                pixel = image[i, j]
-                if pixel > threshold:
-                    result[i, j] = 0
-                else:
-                    result[i, j] = max_value    
-                    
-        return result  
+imageProcessor=ImageProcessor("viber_image_2025-07-27_23-41-23-168.jpg","../runs/detect/train/weights/best.pt")
+
+imageProcessor.process_frame()
+
+detected_frame=imageProcessor.annotated_image()
+resized_frame = cv2.resize(detected_frame, (800, 600))
+cv2.imshow('annotated image',resized_frame)
+cv2.waitKey(0)              
+cv2.destroyAllWindows() 
+
+lp=imageProcessor.crop_license_plate()
+cv2.imshow("plate",lp)
+cv2.waitKey(0)              
+cv2.destroyAllWindows() 
+
+resized = cv2.resize(lp, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+cv2.imshow("resized",resized)
+cv2.waitKey(0)              
+cv2.destroyAllWindows() 
+
+#convert from BGR to Grayscale
+lp_gray=imageProcessor.BGR2GRAY(resized)
+cv2.imshow("grayplate",lp_gray)
+cv2.waitKey(0)              
+cv2.destroyAllWindows() 
+
+#Denoising
+# denoised = cv2.bilateralFilter(lp_gray, 5, 5, 5)
+denoised = imageProcessor.bilateral_filter_gray(lp_gray, 5, 5, 5)
+cv2.imshow("denoised_plate",denoised)
+cv2.waitKey(0)              
+cv2.destroyAllWindows()
+
+#apply thresholding
+_,lp_thresh=cv2.threshold(denoised,100,255,cv2.THRESH_BINARY_INV) # esle tuple return garxa ie threshold value and threshold image
+cv2.imshow("lp_thresh_plate",lp_thresh)
+cv2.waitKey(0)              
+cv2.destroyAllWindows() 
+
+#morphological transformation
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+morphed = cv2.morphologyEx(lp_thresh, cv2.MORPH_OPEN, kernel)
+# cv2.imshow("plate",morphed)
+# cv2.waitKey(0)              
+# cv2.destroyAllWindows() 
+
+texts = imageProcessor.reader.readtext(morphed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.')
+
+for text in texts:
+    _, text, text_score = text
+    print(text,text_score)
+    with open("outputs/track/plate_text.txt", "a", encoding="utf-8") as f:
+            f.write(text+"\n")
