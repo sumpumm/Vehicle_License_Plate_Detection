@@ -50,5 +50,5 @@ def convert_yolo_output_avi_to_mp4(project_dir: str, name: str, fileName: str) -
     return mp4_path
 
 
-def gaussian(x, sigma):
-    return exp(-(x ** 2) / (2 * sigma ** 2))
+#def gaussian(x, sigma):
+#    return exp(-(x ** 2) / (2 * sigma ** 2))
