@@ -22,26 +22,25 @@ class ImageProcessor:
         )
         
     def annotated_image(self):
-       return self.results[0].plot()
-    
+        return self.results[0].plot()
+   
     def crop_license_plate(self):
-        boxes=self.results[0].boxes.xyxy.numpy()
+        boxes = self.results[0].boxes.xyxy.numpy()
         x1, y1, x2, y2 = map(int, boxes[0])
         return self.frame_np[y1:y2, x1:x2]  
     
     def BGR2GRAY(self,lp):
-        height,width,_=lp.shape
-        
-        gray_img=np.zeros((height,width),dtype=np.uint8)
-        
+        height,width,_ =lp.shape
+       
+        gray_img = np.zeros((height,width),dtype=np.uint8)
+       
         for i in range(height):
             for j in range(width):
-                B, G, R = lp[i, j]
-                gray_value = int(0.114 * B + 0.587 * G + 0.299 * R)
-                gray_img[i, j] = gray_value
-                
+                B, G, R = lp[i,j]
+                gray_value = int(0.114* B+ 0.587* G +0.288*R)
+                gray_img[i,j] = gray_value
         return gray_img
-     
+    
     def bilateral_filter_gray(self, gray_image, diameter, sigma_spatial, sigma_range):
         padded_img = cv2.copyMakeBorder(gray_image, diameter//2, diameter//2, diameter//2, diameter//2, cv2.BORDER_REFLECT)
         filtered_img = np.zeros_like(gray_image, dtype=np.float64)
