@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from classes.ImageProcessor import ImageProcessor
 import cv2,easyocr
 
-reader = easyocr.Reader(['ne','en'])
+reader = easyocr.Reader(['ne', 'en'])
 app=FastAPI()
 origins = [ "*", ]
 app.add_middleware(
@@ -25,7 +25,7 @@ app.add_middleware(
 @app.post("/api/webcam")
 async def upload_frame(data: ImageInput):
     try:
-        # Strip header if present (e.g., data:image/jpeg;base64,...)
+       
         header, encoded = data.image.split(",", 1) if "," in data.image else ("", data.image)
 
         # Decode the base64 string
@@ -40,7 +40,7 @@ async def upload_frame(data: ImageInput):
 
         imageProcessor=ImageProcessor(image_bgr,"../runs/detect/train/weights/best.pt")
         imageProcessor.process_frame()
-
+  
         annotated_img=imageProcessor.annotated_image()
         annotated_img_rgb=cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
         
