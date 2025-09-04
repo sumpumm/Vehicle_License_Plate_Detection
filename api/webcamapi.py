@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from classes.ImageProcessor import ImageProcessor
 import cv2,easyocr
 
-reader = easyocr.Reader(['ne'])
+reader = easyocr.Reader(['ne','en'])
 app=FastAPI()
 origins = [ "*", ]
 app.add_middleware(
@@ -72,7 +72,7 @@ async def upload_frame(data: ImageInput):
         # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
         # morphed = cv2.morphologyEx(lp_thresh, cv2.MORPH_OPEN, kernel)
         
-        kernel = np.ones((7,7), dtype=np.uint8)
+        kernel = np.ones((4,4), dtype=np.uint8)
         # opened = imageProcessor.opening(lp_thresh, kernel)
         # cv2.imshow("opened",opened)
         # cv2.waitKey(0)              
@@ -83,11 +83,11 @@ async def upload_frame(data: ImageInput):
         cv2.waitKey(0)              
         cv2.destroyAllWindows()
         
-        ocr_results = reader.readtext(closed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.')
+        ocr_results = reader.readtext(closed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.0ABCD123456789')
         for x in ocr_results:
             print("license plate: ",x[1])
             print("Confidence Score : ",x[2])
-        texts = [res[1] for res in ocr_results]
+        texts = [res[1] for res in ocr_results if res[2] > 0.5]
         conc_text = ""
     
         for text in texts:
