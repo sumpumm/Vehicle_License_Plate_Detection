@@ -25,16 +25,12 @@ app.add_middleware(
 @app.post("/api/webcam")
 async def upload_frame(data: ImageInput):
     try:
-        # Strip header if present (e.g., data:image/jpeg;base64,...)
         header, encoded = data.image.split(",", 1) if "," in data.image else ("", data.image)
 
-        # Decode the base64 string
         image_bytes = base64.b64decode(encoded)
 
-        # Convert to PIL Image
         image = Image.open(BytesIO(image_bytes))
 
-        # Optional: convert to OpenCV format (for your license plate detection)
         image_np = np.array(image)
         image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
@@ -68,15 +64,8 @@ async def upload_frame(data: ImageInput):
         cv2.imshow("lp_thresh_plate",lp_thresh)
         cv2.waitKey(0)              
         cv2.destroyAllWindows()
-
-        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-        # morphed = cv2.morphologyEx(lp_thresh, cv2.MORPH_OPEN, kernel)
         
         kernel = np.ones((4,4), dtype=np.uint8)
-        # opened = imageProcessor.opening(lp_thresh, kernel)
-        # cv2.imshow("opened",opened)
-        # cv2.waitKey(0)              
-        # cv2.destroyAllWindows()
         
         closed = imageProcessor.closing(lp_thresh, kernel)
         cv2.imshow("closed",closed)
@@ -94,16 +83,13 @@ async def upload_frame(data: ImageInput):
             conc_text+=text
         
         print("LP: " +conc_text)
-        
-        # Save to BytesIO buffer
+
         buffered = io.BytesIO()
         annotated_pil.save(buffered, format="JPEG")
         img_bytes = buffered.getvalue()
 
-        # Convert to base64 string
         img_base64 = base64.b64encode(img_bytes).decode("utf-8")
 
-        # Add prefix to make it usable in <img src="..." />
         img_base64 = f"data:image/jpeg;base64,{img_base64}"
 
         return {"status": "success", "annotated_image": img_base64,"license_plate":[conc_text]}
