@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from classes.ImageProcessor import ImageProcessor
 import cv2,easyocr
 
-reader = easyocr.Reader(['ne'])
+reader = easyocr.Reader(['ne', 'en'])
 app=FastAPI()
 origins = [ "*", ]
 app.add_middleware(
@@ -40,7 +40,7 @@ async def upload_frame(data: ImageInput):
 
         imageProcessor=ImageProcessor(image_bgr,"../runs/detect/train/weights/best.pt")
         imageProcessor.process_frame()
-
+  
         annotated_img=imageProcessor.annotated_image()
         annotated_img_rgb=cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
         
@@ -83,7 +83,7 @@ async def upload_frame(data: ImageInput):
         cv2.waitKey(0)              
         cv2.destroyAllWindows()
         
-        ocr_results = reader.readtext(closed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.')
+        ocr_results = reader.readtext(closed,allowlist='०१२३४५६७८९कखगघङचछजझञटठडढणतथधनपफबभमयरलवशषसहक्षत्रज्ञािीुूेैोौंःँ -.0ABCD123456789')
         for x in ocr_results:
             print("license plate: ",x[1])
             print("Confidence Score : ",x[2])
