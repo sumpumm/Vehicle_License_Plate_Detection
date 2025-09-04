@@ -87,7 +87,7 @@ async def upload_frame(data: ImageInput):
         for x in ocr_results:
             print("license plate: ",x[1])
             print("Confidence Score : ",x[2])
-        texts = [res[1] for res in ocr_results]
+        texts = [res[1] for res in ocr_results if res[2]>0.5]
         conc_text = ""
     
         for text in texts:
