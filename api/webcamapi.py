@@ -25,7 +25,7 @@ app.add_middleware(
 @app.post("/api/webcam")
 async def upload_frame(data: ImageInput):
     try:
-       
+        # Strip header if present (e.g., data:image/jpeg;base64,...)
         header, encoded = data.image.split(",", 1) if "," in data.image else ("", data.image)
 
         # Decode the base64 string
